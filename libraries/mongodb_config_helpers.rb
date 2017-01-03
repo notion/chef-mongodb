@@ -19,14 +19,17 @@ module MongoDBConfigHelpers
 
   def to_yaml_options(config)
     require 'yaml'
-    
+
     hash = Hash.new
     config.sort.each do |key, value|
       next if value.nil? || value == ''
-      if value.kind_of?(Array)
+      if value.kind_of?(Array) or value.kind_of?(Hash)
         value.each do |nestedKey, nestedValue|
           next if nestedValue.nil? || nestedValue == ''
-          hash[key] = Hash.new(nestedKey, nestedValue)
+          unless hash.has_key?(key)
+            hash[key] = Hash.new
+          end
+          hash[key].merge!({nestedKey => nestedValue})
         end
       else
         hash[key] = value
