@@ -50,8 +50,8 @@ template init_file do
     dbconfig_file: node['mongodb']['dbconfig_file'],
     sysconfig_file: node['mongodb']['sysconfig_file'],
     ulimit: node['mongodb']['ulimit'],
-    bind_ip: node['mongodb']['config']['bind_ip'],
-    port: node['mongodb']['config']['port'],
+    bind_ip: node['mongodb']['config']['net']['bindIp'],
+    port: node['mongodb']['config']['net']['port'],
     user: node['mongodb']['user']
   )
   action :create_if_missing
@@ -71,7 +71,7 @@ end
 
 # Create keyFile if specified
 if node['mongodb']['key_file_content']
-  file node['mongodb']['config']['keyFile'] do
+  file node['mongodb']['config']['security']['keyFile'] do
     owner node['mongodb']['user']
     group node['mongodb']['group']
     mode  '0600'

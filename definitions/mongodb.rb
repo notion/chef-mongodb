@@ -37,25 +37,25 @@ define :mongodb_instance,
   if node['mongodb']['is_mongos']
     provider = 'mongos'
     # mongos will fail to start if dbpath is set
-    node.default['mongodb']['config']['dbpath'] = nil
-    unless node['mongodb']['config']['configdb']
-      node.default['mongodb']['config']['configdb'] = params[:configservers].map do |n|
-        "#{(n['mongodb']['configserver_url'] || n['fqdn'])}:#{n['mongodb']['config']['port']}"
+    node.default['mongodb']['config']['storage']['dbPath'] = nil
+    unless node['mongodb']['config']['sharding']['configDB']
+      node.default['mongodb']['config']['sharding']['configDB'] = params[:configservers].map do |n|
+        "#{(n['mongodb']['configserver_url'] || n['fqdn'])}:#{n['mongodb']['config']['net']['port']}"
       end.sort.join(',')
     end
   else
     provider = 'mongod'
   end
 
-  node.default['mongodb']['config']['configsvr'] = true if node['mongodb']['is_configserver']
+  node.default['mongodb']['config']['sharding']['clusterRole'] = 'configsvr' if node['mongodb']['is_configserver']
 
   require 'ostruct'
 
   new_resource = OpenStruct.new
 
   new_resource.name                       = params[:name]
-  new_resource.dbpath                     = params[:dbpath]
-  new_resource.logpath                    = params[:logpath]
+  new_resource.dbpath                     = node['mongodb']['config']['storage']['dbPath']
+  new_resource.logpath                    = node['mongodb']['config']['systemLog']['path']
   new_resource.replicaset                 = params[:replicaset]
   new_resource.service_action             = params[:action]
   new_resource.service_notifies           = params[:notifies]
@@ -63,7 +63,7 @@ define :mongodb_instance,
   # TODO(jh): parameterize so we can make a resource provider
   new_resource.auto_configure_replicaset  = node['mongodb']['auto_configure']['replicaset']
   new_resource.auto_configure_sharding    = node['mongodb']['auto_configure']['sharding']
-  new_resource.bind_ip                    = node['mongodb']['config']['bind_ip']
+  new_resource.bind_ip                    = node['mongodb']['config']['net']['bindIp']
   new_resource.cluster_name               = node['mongodb']['cluster_name']
   new_resource.config                     = node['mongodb']['config']
   new_resource.dbconfig_file              = node['mongodb']['dbconfig_file']
@@ -76,8 +76,8 @@ define :mongodb_instance,
   new_resource.is_mongos                  = node['mongodb']['is_mongos']
   new_resource.mongodb_group              = node['mongodb']['group']
   new_resource.mongodb_user               = node['mongodb']['user']
-  new_resource.replicaset_name            = node['mongodb']['config']['replSet']
-  new_resource.port                       = node['mongodb']['config']['port']
+  new_resource.replicaset_name            = node['mongodb']['config']['replication']['replSetName']
+  new_resource.port                       = node['mongodb']['config']['net']['port']
   new_resource.root_group                 = node['mongodb']['root_group']
   new_resource.shard_name                 = node['mongodb']['shard_name']
   new_resource.sharded_collections        = node['mongodb']['sharded_collections']
@@ -213,7 +213,7 @@ define :mongodb_instance,
       :node,
       "mongodb_cluster_name:#{new_resource.replicaset['mongodb']['cluster_name']} AND \
        mongodb_is_replicaset:true AND \
-       mongodb_config_replSet:#{new_resource.replicaset['mongodb']['config']['replSet']} AND \
+       mongodb_shard_name:#{new_resource.replicaset['mongodb']['shard_name']} AND \
        chef_environment:#{new_resource.replicaset.chef_environment}"
     )
 
@@ -238,7 +238,6 @@ define :mongodb_instance,
     shard_nodes = search(
       :node,
       "mongodb_cluster_name:#{new_resource.cluster_name} AND \
-       mongodb_shard_name:#{new_resource.shard_name} AND \
        mongodb_is_shard:true AND \
        chef_environment:#{node.chef_environment}"
     )
