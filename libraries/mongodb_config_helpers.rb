@@ -25,6 +25,7 @@ module MongoDBConfigHelpers
       next if value.nil? || value == ''
       if value.kind_of?(Array)
         value.each do |nestedKey, nestedValue|
+          next if nestedValue.nil? || nestedValue == ''
           hash[key] = Hash.new(nestedKey, nestedValue)
         end
       else
