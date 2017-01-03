@@ -12,7 +12,7 @@ default['mongodb']['config']['net']['bindIp'] = '0.0.0.0'
 # So we make sure to unset logpath when syslog is set since the two
 # settings are incompatible.
 # For more information see: edelight/chef-mongodb#310
-unless node['mongodb']['config']['systemLog']['destination'] == 'syslog'
+unless node['mongodb']['config'].key?('systemLog') && node['mongodb']['config']['systemLog'].key?('destination') && node['mongodb']['config']['systemLog']['destination'] == 'syslog'
   default['mongodb']['config']['systemLog']['path'] = '/var/log/mongodb/mongodb.log'
 end
 default['mongodb']['config']['systemLog']['destination'] = 'file'
