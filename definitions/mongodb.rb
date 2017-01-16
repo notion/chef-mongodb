@@ -36,8 +36,9 @@ define :mongodb_instance,
   # with precedence while Chef 10 copies to not (TBD: find documentation to support observed behavior).
   if node['mongodb']['is_mongos']
     provider = 'mongos'
-    # mongos will fail to start if dbpath is set
+    # mongos will fail to start if dbpath and storageEngine is set
     node.default['mongodb']['config']['storage']['dbPath'] = nil
+    node.default['mongodb']['config']['storage']['engine'] = nil
     unless node['mongodb']['config'].key?('sharding') && node['mongodb']['config']['sharding'].key?('configDB') && node['mongodb']['config']['sharding']['configDB']
       node.default['mongodb']['config']['sharding']['configDB'] = params[:configservers].map do |n|
         "#{(n['mongodb']['configserver_url'] || n['fqdn'])}:#{n['mongodb']['config']['net']['port']}"
