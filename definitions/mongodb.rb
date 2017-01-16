@@ -38,7 +38,7 @@ define :mongodb_instance,
     provider = 'mongos'
     # mongos will fail to start if dbpath is set
     node.default['mongodb']['config']['storage']['dbPath'] = nil
-    unless node['mongodb']['config']['sharding']['configDB']
+    unless node['mongodb']['config'].key?('sharding') && node['mongodb']['config']['sharding'].key?('configDB') && node['mongodb']['config']['sharding']['configDB']
       node.default['mongodb']['config']['sharding']['configDB'] = params[:configservers].map do |n|
         "#{(n['mongodb']['configserver_url'] || n['fqdn'])}:#{n['mongodb']['config']['net']['port']}"
       end.sort.join(',')
