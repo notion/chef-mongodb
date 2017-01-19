@@ -40,7 +40,12 @@ define :mongodb_instance,
     node.default['mongodb']['config']['storage']['dbPath'] = nil
     node.default['mongodb']['config']['storage']['engine'] = nil
     unless node['mongodb']['config'].key?('sharding') && node['mongodb']['config']['sharding'].key?('configDB') && node['mongodb']['config']['sharding']['configDB']
-      node.default['mongodb']['config']['sharding']['configDB'] = params[:configservers].map do |n|
+      csrs = if node['mongodb']['config_replset']
+               node['mongodb']['config_replset']} + '/'
+             else
+               ''
+             end
+      node.default['mongodb']['config']['sharding']['configDB'] = csrs + params[:configservers].map do |n|
         "#{(n['mongodb']['configserver_url'] || n['fqdn'])}:#{n['mongodb']['config']['net']['port']}"
       end.sort.join(',')
     end
